@@ -2,7 +2,7 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: main
+    branches: [main, dev_imaginator]
 
 name: shiny-deploy
 
@@ -29,9 +29,13 @@ jobs:
 
       - name: Install packages
         run: |
-          R -e 'install.packages("renv")'
+          R -e 'install.packages("renv, remotes")'
           R -e 'renv::restore()'
 
+      - name: Install simulationmachine
+        run: remotes::install_github("kasaai/simulationmachine")
+        shell: Rscript {0}
+        
       - name: Install rsconnect
         run: install.packages("rsconnect")
         shell: Rscript {0}
