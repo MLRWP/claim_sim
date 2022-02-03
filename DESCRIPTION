@@ -1,3 +1,4 @@
+Package: dummy
 Depends:
   remotes, 
   rsconnect,
