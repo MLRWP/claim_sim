@@ -29,7 +29,7 @@ jobs:
 
       - name: Install packages
         run: |
-          R -e 'install.packages("renv, remotes")'
+          R -e 'install.packages(c("renv", "remotes"))'
           R -e 'renv::restore()'
 
       - name: Install simulationmachine
