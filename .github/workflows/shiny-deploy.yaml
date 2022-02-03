@@ -20,13 +20,6 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v1
 
-      - name: Cache Renv packages
-        uses: actions/cache@v2
-        with:
-          path: $HOME/.local/share/renv
-          key: r-${{ hashFiles('renv.lock') }}
-          restore-keys: r-
-
       - name: Install packages
         run: |
           R -e 'install.packages(c("remotes", "rsconnect", "shiny", "tidyverse", "cascsim", "imaginator", "DT", "SynthETIC", "data.table", "scales"))'
