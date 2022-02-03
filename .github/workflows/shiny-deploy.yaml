@@ -18,15 +18,14 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v1
       
       - name: Setup R
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
 
       - name: Install packages
         run: |
           R -e 'install.packages(c("remotes", "rsconnect", "shiny", "tidyverse", "cascsim", "imaginator", "DT", "SynthETIC", "data.table", "scales"))'
           R -e 'remotes::install_github("kasaai/simulationmachine")'
-
-      - name: Cache R packages 
-        uses: r-lib/actions/cache-r@master
 
       - name: Authorize and deploy app
         run: |
