@@ -29,16 +29,8 @@ jobs:
 
       - name: Install packages
         run: |
-          R -e 'install.packages(c("renv", "remotes"))'
-          R -e 'renv::restore()'
-
-      - name: Install simulationmachine
-        run: remotes::install_github("kasaai/simulationmachine")
-        shell: Rscript {0}
-        
-      - name: Install rsconnect
-        run: install.packages("rsconnect")
-        shell: Rscript {0}
+          R -e 'install.packages(c("remotes", "rsconnect", "shiny", "tidyverse", "cascsim", "imaginator", "DT", "SynthETIC", "data.table", "scales"))'
+          R -e 'remotes::install_github("kasaai/simulationmachine")'
 
       - name: Authorize and deploy app
         run: |
