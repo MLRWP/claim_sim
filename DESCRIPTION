@@ -1,0 +1,11 @@
+Depends:
+  remotes, 
+  rsconnect,
+  shiny,
+  tidyverse,
+  cascsim,
+  imaginator,
+  DT,
+  SynthETIC,
+  data.table,
+  scales
