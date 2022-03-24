@@ -228,7 +228,8 @@ expr_imaginator <- quote({
     tbl_policies() %>% 
       mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>% 
       ggplot(aes(policy_year)) + 
-      geom_bar()
+      geom_bar() + 
+      theme_minimal()
   })
   
   output$plt_claim_counts_by_policy_year <- renderPlot({
@@ -240,7 +241,8 @@ expr_imaginator <- quote({
       group_by(policy_year) %>%
       summarise(n_claims = n()) %>%
       ggplot(aes(policy_year, n_claims)) +
-      geom_bar(stat = 'identity')
+      geom_bar(stat = 'identity') + 
+      theme_minimal()
   })
   
   output$plt_payment_totals_by_policy_year <- renderPlot({
@@ -252,7 +254,8 @@ expr_imaginator <- quote({
       group_by(policy_year) %>%
       summarise(claim_amounts = sum(payment_amount)) %>%
       ggplot(aes(policy_year, claim_amounts)) +
-      geom_bar(stat = 'identity')
+      geom_bar(stat = 'identity') + 
+      theme_minimal()
   })
   
   output$plt_payment_totals_by_accident_year <- renderPlot({
@@ -264,7 +267,8 @@ expr_imaginator <- quote({
       group_by(accident_year) %>%
       summarise(claim_amounts = sum(payment_amount)) %>%
       ggplot(aes(accident_year, claim_amounts)) +
-      geom_bar(stat = 'identity')
+      geom_bar(stat = 'identity') + 
+      theme_minimal()
   })
   
 })
