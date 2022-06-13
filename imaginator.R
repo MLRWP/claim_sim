@@ -1,17 +1,5 @@
 library(imaginator)
-
-# panel_payment_frequency <- discrete_picker_ui(
-#   
-# )
-
-panel_occurrence_wait <- distribution_picker_ui(
-  'occurrence_wait', 'Wait time until occurrence', list(min = 1, step = 5, value = 1))
-panel_report_wait <- distribution_picker_ui(
-  'report_wait', 'Wait time until report', list(min = 1, step = 5, value = 1))
-panel_pay_wait <- distribution_picker_ui(
-  'pay_wait', 'Wait time between payments', list(min = 1, step = 5, value = 1))
-panel_pay_severity <- distribution_picker_ui(
-  'pay_severity', 'Claim payment severity', list(min = 1, step = 250, value = 500))
+source("distributions3_ui.R")
 
 tab_imaginator <- tabPanel(
   'imaginator',
@@ -33,64 +21,40 @@ tab_imaginator <- tabPanel(
         step = 1,
         value = 5
       ),
-      h4("Policy growth and retention"),
-      fluidRow(
-        column(6, 
-          numericInput(
-            "growth_rate",
-            "Policyholder growth rate:",
-            min = 0,
-            max = 10,
-            step = .01,
-            value = 0
-          ),
-        ), 
-        column(6, 
-          numericInput(
-            "retention",
-            "Policyholder retention:",
-            min = 0,
-            max = 1,
-            step = 0.01,
-            value = 1
-          ),
-        ),
-      ),
-      numericInput(
-        "claim_frequency",
-        "Claim frequency",
-        min = 1,
-        max = 50,
-        step = 1,
-        value = 1
-      ),
-      numericInput(
-        "payment_frequency",
-        "Payment frequency",
-        min = 1,
-        max = 50,
-        step = 1,
-        value = 1
-      ),
+      # h3("Policy growth and retention"),
+      # fluidRow(
+      #   column(6, 
+      #     wellPanel(
+      #     ),
+      #   ), 
+      #   column(6, 
+      #     wellPanel(
+      #     ),
+      #   ),
+      # ),
+      h3("Claim frequency"),
       wellPanel(
-        panel_occurrence_wait$radio,
-        panel_occurrence_wait$fixed,
-        panel_occurrence_wait$distribution
+        distributions3_ui("claim_frequency")
       ),
+      h3("Payment frequency"),
       wellPanel(
-        panel_report_wait$radio,
-        panel_report_wait$fixed,
-        panel_report_wait$distribution
+        distributions3_ui("payment_frequency")
       ),
+      h3("Occurrence wait time"),
       wellPanel(
-        panel_pay_wait$radio,
-        panel_pay_wait$fixed,
-        panel_pay_wait$distribution
+        distributions3_ui("wait_occurrence")
       ),
+      h3("Report wait time"),
       wellPanel(
-        panel_pay_severity$radio,
-        panel_pay_severity$fixed,
-        panel_pay_severity$distribution
+        distributions3_ui("wait_report")
+      ),
+      h3("Payment wait"),
+      wellPanel(
+        distributions3_ui("wait_payment")
+      ),
+      h3("Payment severity"),
+      wellPanel(
+        distributions3_ui("payment_severity")
       )
     ),
     mainPanel(
@@ -111,107 +75,41 @@ expr_imaginator <- quote({
   tbl_policies <- reactiveVal(NULL)
   tbl_claim_transactions <- reactiveVal(NULL)
   tbl_claims <- reactiveVal(NULL)
-  dist_claim_frequency <- reactiveVal(NULL)
-  dist_occurrence_wait <- reactiveVal(NULL)
-  dist_report_wait <- reactiveVal(NULL)
-  dist_pay_wait <- reactiveVal(NULL)
-  dist_pay_severity <- reactiveVal(NULL)
+  
+  # dist_policyholder_growth <- reactiveVal(NULL)
+  # dist_policyholder_retention <- reactiveVal(NULL)
 
+  dist_claim_frequency <- distributions3_server("claim_frequency")
+  dist_payment_frequency <- distributions3_server("payment_frequency")
+  dist_occurrence_wait <- distributions3_server("wait_occurrence")
+  dist_report_wait <- distributions3_server("wait_report")
+  dist_payment_wait <- distributions3_server("wait_payment")
+  dist_payment_severity <- distributions3_server("payment_severity")
+  
   observe({
 
     tbl_policies(
       policies_simulate(
         n = input$num_starting_policies,
         num_years = input$num_policy_years,
-        retention = input$retention,
-        growth = input$growth_rate)    
-    )
-
-    dist_occurrence_wait(
-      if (input$rdo_occurrence_wait_random == 'Fixed') {
-        distributions3::Uniform(input$fixed_occurrence_wait, input$fixed_occurrence_wait)
-      } else {
-        if (input$occurrence_wait_distribution == 'Uniform') {
-          distributions3::Uniform(
-            input$occurrence_wait_uniform_lower_bound, 
-            input$occurrence_wait_uniform_upper_bound
-          )
-        } else if (input$occurrence_wait_distribution == 'Normal') {
-          distributions3::Normal(
-            input$occurrence_wait_normal_mu,
-            input$occurrence_wait_normal_cv * input$occurrence_wait_normal_mu
-          )
-        }
-      }
+        retention = 1,
+        growth = 0
+      )
     )
     
-    dist_report_wait(
-      if (input$rdo_report_wait_random == 'Fixed') {
-        distributions3::Uniform(input$fixed_report_wait, input$fixed_report_wait)
-      } else {
-        if (input$report_wait_distribution == 'Uniform') {
-          distributions3::Uniform(
-            input$report_wait_uniform_lower_bound, 
-            input$report_wait_uniform_upper_bound
-          )
-        } else if (input$report_wait_distribution == 'Normal') {
-          distributions3::Normal(
-            input$report_wait_normal_mu,
-            input$report_wait_normal_cv * input$report_wait_normal_mu
-          )
-        }
-      }
-    )
-    
-    dist_pay_wait(
-      if (input$rdo_pay_wait_random == 'Fixed') {
-        distributions3::Uniform(input$fixed_pay_wait, input$fixed_pay_wait)
-      } else {
-        if (input$pay_wait_distribution == 'Uniform') {
-          distributions3::Uniform(
-            input$pay_wait_uniform_lower_bound, 
-            input$pay_wait_uniform_upper_bound
-          )
-        } else if (input$pay_wait_distribution == 'Normal') {
-          distributions3::Normal(
-            input$pay_wait_normal_mu,
-            input$pay_wait_normal_cv * input$pay_wait_normal_mu
-          )
-        }
-      }
-    )
-    
-    dist_pay_severity(
-      if (input$rdo_pay_severity_random == 'Fixed') {
-        distributions3::Uniform(input$fixed_pay_severity, input$fixed_pay_severity)
-      } else {
-        if (input$pay_severity_distribution == 'Uniform') {
-          distributions3::Uniform(
-            input$pay_severity_uniform_lower_bound, 
-            input$pay_severity_uniform_upper_bound
-          )
-        } else if (input$pay_severity_distribution == 'Normal') {
-          distributions3::Normal(
-            input$pay_severity_normal_mu,
-            input$pay_severity_normal_cv * input$pay_severity_normal_mu
-          )
-        }
-      }
-    )
-
     tbl_claim_transactions({
       tbl_claim <- claims_by_wait_time(
         tbl_policies(),
-        claim_frequency = 1,
-        payment_frequency = 1,
+        claim_frequency = dist_claim_frequency(),
+        payment_frequency = dist_payment_frequency(),
         occurrence_wait = dist_occurrence_wait(),
         report_wait = dist_report_wait(),
-        pay_wait = dist_pay_wait(),
-        pay_severity = dist_pay_severity()
+        pay_wait = dist_payment_wait(),
+        pay_severity = dist_payment_severity()
       )
 
     })
-    
+
     tbl_claims({
       validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
       tbl_claim_transactions() %>%
@@ -224,11 +122,13 @@ expr_imaginator <- quote({
   })
 
   output$plt_policies <- renderPlot({
-    
-    tbl_policies() %>% 
-      mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>% 
-      ggplot(aes(policy_year)) + 
-      geom_bar() + 
+
+    validate(need(tbl_policies(), "Waiting on policy data"))
+
+    tbl_policies() %>%
+      mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>%
+      ggplot(aes(policy_year)) +
+      geom_bar() +
       theme_minimal()
   })
   
@@ -241,12 +141,12 @@ expr_imaginator <- quote({
       group_by(policy_year) %>%
       summarise(n_claims = n()) %>%
       ggplot(aes(policy_year, n_claims)) +
-      geom_bar(stat = 'identity') + 
+      geom_bar(stat = 'identity') +
       theme_minimal()
   })
-  
+
   output$plt_payment_totals_by_policy_year <- renderPlot({
-    
+
     validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
 
     tbl_claims() %>%
@@ -254,21 +154,21 @@ expr_imaginator <- quote({
       group_by(policy_year) %>%
       summarise(claim_amounts = sum(payment_amount)) %>%
       ggplot(aes(policy_year, claim_amounts)) +
-      geom_bar(stat = 'identity') + 
+      geom_bar(stat = 'identity') +
       theme_minimal()
   })
-  
+
   output$plt_payment_totals_by_accident_year <- renderPlot({
-    
+
     validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
-    
+
     tbl_claims() %>%
       mutate(accident_year = lubridate::floor_date(occurrence_date, unit = 'year')) %>%
       group_by(accident_year) %>%
       summarise(claim_amounts = sum(payment_amount)) %>%
       ggplot(aes(accident_year, claim_amounts)) +
-      geom_bar(stat = 'identity') + 
+      geom_bar(stat = 'identity') +
       theme_minimal()
   })
-  
+
 })
