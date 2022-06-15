@@ -3,8 +3,9 @@ source("distributions3_ui.R")
 
 tab_imaginator <- tabPanel(
   'imaginator',
-  sidebarLayout(
-    sidebarPanel(
+  fluidRow(
+    column(
+      width = 3,
       numericInput(
         "num_starting_policies",
         "Set the number of initial policies",
@@ -21,6 +22,7 @@ tab_imaginator <- tabPanel(
         step = 1,
         value = 5
       ),
+    ),
       # h3("Policy growth and retention"),
       # fluidRow(
       #   column(6, 
@@ -32,6 +34,8 @@ tab_imaginator <- tabPanel(
       #     ),
       #   ),
       # ),
+    column(
+      width = 3,
       h3("Claim frequency"),
       wellPanel(
         distributions3_ui("claim_frequency")
@@ -40,6 +44,9 @@ tab_imaginator <- tabPanel(
       wellPanel(
         distributions3_ui("payment_frequency")
       ),
+    ), 
+    column(
+      width = 3,
       h3("Occurrence wait time"),
       wellPanel(
         distributions3_ui("wait_occurrence")
@@ -48,6 +55,9 @@ tab_imaginator <- tabPanel(
       wellPanel(
         distributions3_ui("wait_report")
       ),
+    ),
+    column(
+      width = 3,
       h3("Payment wait"),
       wellPanel(
         distributions3_ui("wait_payment")
@@ -57,16 +67,28 @@ tab_imaginator <- tabPanel(
         distributions3_ui("payment_severity")
       )
     ),
-    mainPanel(
-      h2("Policy counts by policy year"),
-      plotOutput("plt_policies", width = "60%"),
-      h2("Claim counts by policy year"),
-      plotOutput("plt_claim_counts_by_policy_year", width = "60%"),
-      h2('Payment totals by policy year'),
-      plotOutput("plt_payment_totals_by_policy_year", width = "60%"),
-      h2('Payment totals by accident year'),
-      plotOutput("plt_payment_totals_by_accident_year", width = "60%")
-    )
+    # fluidRow(
+    #   column(
+    #     3, 
+    #     h2("Policy counts by policy year"),
+    #     plotOutput("plt_policies", width = "60%")
+    #   ),
+    #   column(
+    #     3, 
+    #     h2("Claim counts by policy year"),
+    #     plotOutput("plt_claim_counts_by_policy_year", width = "60%")
+    #   ),
+    #   column(
+    #     3, 
+    #     h2('Payment totals by policy year'),
+    #     plotOutput("plt_payment_totals_by_policy_year", width = "60%")
+    #   ),
+    #   column(
+    #     3, 
+    #     h2('Payment totals by accident year'),
+    #     plotOutput("plt_payment_totals_by_accident_year", width = "60%")
+    #   )
+    # )
   )
 )
 
