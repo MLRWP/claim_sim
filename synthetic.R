@@ -3,18 +3,11 @@ library(SPLICE)
 
 tab_synthetic <- tabPanel(
   'SPLICE',
-  sidebarLayout(
-    sidebarPanel(
+  fluidRow(
+    column(
+      width = 2,
       wellPanel(
         h5("Module 0: Configuration"),
-        numericInput(
-          "rnd_seed",
-          "Random seed",
-          min = 0,
-          max = 100,
-          step = 1,
-          value = 50
-        ),
         numericInput(
           "ref_claim",
           "Reference claim amount",
@@ -31,15 +24,10 @@ tab_synthetic <- tabPanel(
           step = 1,
           value = 3
         ),
-        numericInput(
-          "years",
-          "Years",
-          min = 1,
-          max = 40,
-          step = 1,
-          value = 2
-        )
-      ),
+      )
+    ),
+    column(
+      width = 2,
       # Start wellPanel: Select Module 1 occurance options
       wellPanel(
         selectInput(
@@ -129,7 +117,9 @@ tab_synthetic <- tabPanel(
         # End 3. Negative binomial claim frequency distribution
       ),
       # End wellPanel: Module 1 select occurance options
-      
+    ),
+    column(
+      width = 2,
       # Start wellPanel: Module 2 select occurance size options
       wellPanel(
         selectInput(
@@ -169,10 +159,11 @@ tab_synthetic <- tabPanel(
           h5("Weibull option requires no parameter definition")
         )
         # End: 3. Weibull
-      ),
-      # End wellPanel: Module 2 select occurance size options
-      
-      # Start wellPanel: Select Module 3 notification delay options
+      )
+    ), # End Module 2 select occurance size options
+    # Start wellPanel: Select Module 3 notification delay options
+    column(
+      width = 2,
       wellPanel(
         selectInput(
           "Notif_Delay_selection",
@@ -218,10 +209,11 @@ tab_synthetic <- tabPanel(
           )
         )
         # End 3. Mixed distribution
-      ),
-      # End wellPanel: Module 3 notification delay options   
-      
-      # Start wellPanel:Module 4 Closure delay options
+      )
+    ), # End Module 3 notification delay options   
+    # Start wellPanel:Module 4 Closure delay options
+    column(
+      width = 2,
       wellPanel(
         selectInput(
           "Cls_delay_selection",
@@ -254,28 +246,17 @@ tab_synthetic <- tabPanel(
           )
         )
         # End: 2. Dependence on notification delay
-      ),
-      # End wellPanel: Module 4 select occurance options
-      
-      
-    ),
-    # End sidebarPanel
-    mainPanel(
-      # h2("Claim frequency"),
-      plotOutput("plot_n_vector"),
-      plotOutput("plot_claim_size"),
-      plotOutput("plot_notidel"),
-      plotOutput("plot_setldel"),
-      plotOutput("hist_no_payments"),
-      plotOutput("hist_size_payments"),
-      plotOutput("plot_claims")
+      ), # End Module 4 select occurance options
     )
   )
-  # sidebarLayout
 )
-# tabPanel
 
 expr_synthetic <- quote({
+  
+  n_vector <- reactiveVal(NULL)
+  I <- reactiveVal(NULL)
+  claim_sizes_default <- reactiveVal(NULL)
+  claim_sizes <- reactiveVal(NULL)
   
   observe({
     # Module 0: Configuration
@@ -284,17 +265,17 @@ expr_synthetic <- quote({
                    time_unit = as.numeric(input$time_unit_month/12))
     ref_claim <- return_parameters()[1]
     time_unit <- return_parameters()[2]
-    years <- as.numeric(input$years)
-    I <- years / time_unit
+    years <- as.numeric(input$years_exposure)
+    I(years / time_unit)
     
     # Module 1: Occurence
     if (input$Occurence_selection == 'Constant exposure and frequency'){
 
         # Option 1: Constant exposure and frequency
-        E <- c(rep(as.numeric(input$eff_ann_exp_rate), I))
-        lambda <- c(rep(as.numeric(input$claims_freq), I))
-        n_vector <- claim_frequency(I = I, E = E, freq = lambda)
-        occurrence_times <- claim_occurrence(frequency_vector = n_vector)
+        E <- c(rep(as.numeric(input$eff_ann_exp_rate), I()))
+        lambda <- c(rep(as.numeric(input$claims_freq), I()))
+        n_vector(claim_frequency(I = I(), E = E, freq = lambda))
+        occurrence_times <- claim_occurrence(frequency_vector = n_vector())
 
         # Original code
         # E <- c(rep(12e3, I)) # effective annual exposure rates
@@ -306,26 +287,27 @@ expr_synthetic <- quote({
     } else if (input$Occurence_selection == 'Increasing exposure and constant frequency'){
 
       # Option 2: Increasing exposure, constant frequency per unit of exposure
-      E <- c(rep(as.numeric(input$eff_ann_exp_rate), I)) + seq(from = 0, by = 100, length = I) # set linearly increasing exposure
-      lambda <- c(rep(as.numeric(input$claims_freq), I)) # set constant frequency per unit of exposure
-      n_vector <- claim_frequency(I = I, E = E, freq = lambda)
-      occurrence_times <- claim_occurrence(frequency_vector = n_vector)
+      E <- c(rep(as.numeric(input$eff_ann_exp_rate), I())) + seq(from = 0, by = 100, length = I()) # set linearly increasing exposure
+      lambda <- c(rep(as.numeric(input$claims_freq), I())) # set constant frequency per unit of exposure
+      n_vector(claim_frequency(I = I(), E = E, freq = lambda))
+      occurrence_times <- claim_occurrence(frequency_vector = n_vector())
 
     } else if (input$Occurence_selection == 'Constant exposure and negative binomial frequency'){
 
       # Option 3: Negative binomial claim frequency distribution
-      n_vector <- claim_frequency(I = I,
+      n_vector(claim_frequency(I = I(),
                                   simfun = rnbinom,
                                   size = as.numeric(input$occurence_neg_bin_size),
                                   mu = as.numeric(input$occurence_neg_bin_mu))
-      occurrence_times <- claim_occurrence(frequency_vector = n_vector)
+      )
+      occurrence_times <- claim_occurrence(frequency_vector = n_vector())
       
     }
     else if (input$Occurence_selection == 'Constant exposure and zero-truncated Poisson frequency'){
 
       # Option 4: Zero-truncated Poisson claim frequency distribution
-      n_vector <- claim_frequency(I = I, simfun = actuar::rztpois, lambda = 90)
-      occurrence_times <- claim_occurrence(frequency_vector = n_vector)
+      n_vector(claim_frequency(I = I(), simfun = actuar::rztpois, lambda = 90))
+      occurrence_times <- claim_occurrence(frequency_vector = n_vector())
 
     } else if (input$Occurence_selection == 'Increasing exposure and zero-truncated Poisson frequency'){
 
@@ -333,26 +315,26 @@ expr_synthetic <- quote({
       # Note time_unit not defined
 
       # set linearly increasing exposure
-      E <- c(rep(input$eff_ann_exp_rate, I)) + seq(from = 0, by = 100, length = I)
+      E <- c(rep(input$eff_ann_exp_rate, I())) + seq(from = 0, by = 100, length = I())
       # set constant frequency per unit of exposure
-      lambda <- c(rep(input$claims_freq, I))
-      n_vector <- claim_frequency(I = I, simfun = actuar::rztpois, lambda = time_unit *E* lambda)
-      occurrence_times <- claim_occurrence(frequency_vector = n_vector)
+      lambda <- c(rep(input$claims_freq, I()))
+      n_vector(claim_frequency(I = I(), simfun = actuar::rztpois, lambda = time_unit *E* lambda))
+      occurrence_times <- claim_occurrence(frequency_vector = n_vector())
 
     }
     # print(glimpse(I))
     # print(glimpse(n_vector))
     
     # print(glimpse(str(all_claims)))
-    output$plot_n_vector <- renderPlot({
-      plot(x = 1:I, y = n_vector, type = "l",
-           main = paste("Module 1: Claim frequency simulated from the",input$Occurence_selection,"option"),
-           xlab = "Occurrence period", ylab = "# Claims")
-    })
+    # output$plot_n_vector <- renderPlot({
+    #   plot(x = 1:I, y = n_vector, type = "l",
+    #        main = paste("Module 1: Claim frequency simulated from the",input$Occurence_selection,"option"),
+    #        xlab = "Occurrence period", ylab = "# Claims")
+    # })
     
     
     # Module 2: Size
-    claim_sizes_default <- claim_size(n_vector)
+    claim_sizes_default(claim_size(n_vector()))
       
     if (input$Occurence_size == 'Power normal'){
 
@@ -370,7 +352,7 @@ expr_synthetic <- quote({
           return(p_rescaled)
         }
       }
-      claim_sizes <- claim_size(frequency_vector = n_vector, simfun = S_df, type = "p", range = c(0, 1e24))
+      claim_sizes(claim_size(frequency_vector = n_vector(), simfun = S_df, type = "p", range = c(0, 1e24)))
 
       # print(glimpse(claim_sizes))
       
@@ -384,24 +366,26 @@ expr_synthetic <- quote({
       weibull_scale <- get_Weibull_parameters(target_mean = claim_size_mean, target_cv = claim_size_cv)[2]
 
       # simulate claim sizes with the estimated parameters
-      claim_sizes <- claim_size(frequency_vector = n_vector,simfun = rweibull, shape = weibull_shape, scale = weibull_scale)
+      claim_sizes(
+        claim_size(frequency_vector = n_vector(),simfun = rweibull, shape = weibull_shape, scale = weibull_scale)
+      )
 
       # print(glimpse(claim_sizes))
     }
     
-    output$plot_claim_size <- renderPlot({
-      
-      # flag> xlim needs to be flexible
-      plot(ecdf(unlist(claim_sizes_default)), xlim = c(0, 2000000), 
-           main = "Module 2: Empirical distribution of simulated claim sizes",
-           xlab = "Individual claim size")
-      
-      plot(ecdf(unlist(claim_sizes)), add = TRUE, col = 2)
-      
-      legend.text <- c("Default", input$Occurence_size)
-      legend("bottomright", legend.text, col = 1:3, lty = 1, bty = "n")
-      
-    })
+    # output$plot_claim_size <- renderPlot({
+    #   
+    #   # flag> xlim needs to be flexible
+    #   plot(ecdf(unlist(claim_sizes_default)), xlim = c(0, 2000000), 
+    #        main = "Module 2: Empirical distribution of simulated claim sizes",
+    #        xlab = "Individual claim size")
+    #   
+    #   plot(ecdf(unlist(claim_sizes)), add = TRUE, col = 2)
+    #   
+    #   legend.text <- c("Default", input$Occurence_size)
+    #   legend("bottomright", legend.text, col = 1:3, lty = 1, bty = "n")
+    #   
+    # })
     
     # # Module 3: Notification delay
     notidel_param_default <- function(claim_size, occurrence_period) {
@@ -413,7 +397,7 @@ expr_synthetic <- quote({
       c(shape = shape, scale = scale)
     }
     
-    notidel_default <- claim_notification(n_vector, claim_sizes, paramfun = notidel_param_default)
+    notidel_default <- claim_notification(n_vector(), claim_sizes(), paramfun = notidel_param_default)
     
     
     if (input$Notif_Delay_selection == 'Weibull'){
@@ -434,7 +418,7 @@ expr_synthetic <- quote({
         c(shape = shape, scale = scale)
       }
 
-      notidel <- claim_notification(n_vector, claim_sizes, paramfun = notidel_param)
+      notidel <- claim_notification(n_vector(), claim_sizes(), paramfun = notidel_param)
 
       # print(glimpse(notidel))
       
@@ -447,7 +431,7 @@ expr_synthetic <- quote({
       }
 
       # simulate notification delays from the transformed gamma
-      notidel <- claim_notification(n_vector, claim_sizes, rfun = actuar::rtrgamma, paramfun = trgamma_param, rate = 2)
+      notidel <- claim_notification(n_vector(), claim_sizes(), rfun = actuar::rtrgamma, paramfun = trgamma_param, rate = 2)
 
       # print(glimpse(notidel))
       
@@ -466,20 +450,20 @@ expr_synthetic <- quote({
         result[x_selected] <- x[x_selected]; result[!x_selected] <- y[!x_selected]
         return(result)
       }
-      notidel <- claim_notification(n_vector, claim_sizes, rfun = rmixed_notidel)
+      notidel <- claim_notification(n_vector(), claim_sizes(), rfun = rmixed_notidel)
 
       # print(glimpse(notidel))
       
     }
     
-    output$plot_notidel <- renderPlot({
-      plot(ecdf(unlist(notidel_default)), # xlim = c(0, 15),
-           main = "Module 3: Empirical distribution of simulated notification delays",
-           xlab = "Notification delay (in quarters)")
-      plot(ecdf(unlist(notidel)), add = TRUE, col = 2)
-      legend.text <- c("Weibull (default)", input$Notif_Delay_selection)
-      legend("bottomright", legend.text, col = 1:2, lty = 1, bty = "n")
-    })
+    # output$plot_notidel <- renderPlot({
+    #   plot(ecdf(unlist(notidel_default)), # xlim = c(0, 15),
+    #        main = "Module 3: Empirical distribution of simulated notification delays",
+    #        xlab = "Notification delay (in quarters)")
+    #   plot(ecdf(unlist(notidel)), add = TRUE, col = 2)
+    #   legend.text <- c("Weibull (default)", input$Notif_Delay_selection)
+    #   legend("bottomright", legend.text, col = 1:2, lty = 1, bty = "n")
+    # })
       
     # Module 4: Closer Delay
     setldel_param <- function(claim_size, occurrence_period) {
@@ -502,7 +486,7 @@ expr_synthetic <- quote({
         scale = get_Weibull_parameters(target_mean, target_cv)[2, ])
     }
     
-    setldel <- claim_closure(n_vector, claim_sizes, paramfun = setldel_param)
+    setldel <- claim_closure(n_vector(), claim_sizes(), paramfun = setldel_param)
 
     # FLAG: Check Axis bounds 
     output$plot_setldel <- renderPlot({
@@ -529,7 +513,7 @@ expr_synthetic <- quote({
       no_pmt
     }
     
-    no_payments <- claim_payment_no(n_vector, claim_sizes, rfun = rmixed_payment_no,
+    no_payments <- claim_payment_no(n_vector(), claim_sizes(), rfun = rmixed_payment_no,
                                     claim_size_benchmark_1 = 0.0375 * ref_claim,
                                     claim_size_benchmark_2 = 0.075 * ref_claim)
     
@@ -600,8 +584,8 @@ expr_synthetic <- quote({
       return(amt)
     }
     
-    payment_sizes <- claim_payment_size(n_vector, claim_sizes, no_payments, rmixed_payment_size)
-    print(glimpse(unlist(payment_sizes)))
+    payment_sizes <- claim_payment_size(n_vector(), claim_sizes(), no_payments, rmixed_payment_size)
+    # print(glimpse(unlist(payment_sizes)))
     
     # FLAG > Better visual needed
     output$hist_size_payments <- renderPlot({
@@ -663,13 +647,13 @@ expr_synthetic <- quote({
       return(result)
     }
     
-    payment_delays <- claim_payment_delay(n_vector, claim_sizes, no_payments, setldel,
+    payment_delays <- claim_payment_delay(n_vector(), claim_sizes(), no_payments, setldel,
                                           rfun = r_pmtdel, paramfun = param_pmtdel,
-                                          occurrence_period = rep(1:I, times = n_vector))
+                                          occurrence_period = rep(1:I(), times = n_vector()))
     
-    payment_times <- claim_payment_time(n_vector, occurrence_times, notidel, payment_delays)
+    payment_times <- claim_payment_time(n_vector(), occurrence_times, notidel, payment_delays)
     
-    payment_periods <- claim_payment_time(n_vector, occurrence_times, notidel, payment_delays,
+    payment_periods <- claim_payment_time(n_vector(), occurrence_times, notidel, payment_delays,
                                           discrete = TRUE)
     # print(glimpse(cbind(payment_delays[[1]][[1]], payment_times[[1]][[1]], payment_periods[[1]][[1]])))
     
@@ -694,14 +678,14 @@ expr_synthetic <- quote({
     }
     
     payment_inflated <- claim_payment_inflation(
-      n_vector, payment_sizes, payment_times, occurrence_times,
-      claim_sizes, base_inflation_vector, SI_occurrence, SI_payment)
+      n_vector(), payment_sizes, payment_times, occurrence_times,
+      claim_sizes(), base_inflation_vector, SI_occurrence, SI_payment)
 
     # Part 9: Output
     all_claims <- claims(
-      frequency_vector = n_vector,
+      frequency_vector = n_vector(),
       occurrence_list = occurrence_times,
-      claim_size_list = claim_sizes,
+      claim_size_list = claim_sizes(),
       notification_list = notidel,
       settlement_list = setldel,
       no_payments_list = no_payments,

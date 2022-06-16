@@ -5,7 +5,7 @@ tab_imaginator <- tabPanel(
   'imaginator',
   fluidRow(
     column(
-      width = 3,
+      width = 12,
       numericInput(
         "num_starting_policies",
         "Set the number of initial policies",
@@ -14,15 +14,9 @@ tab_imaginator <- tabPanel(
         step = 5,
         value = 10
       ),
-      numericInput(
-        "num_policy_years",
-        "Choose number of policy years:",
-        min = 2,
-        max = 20,
-        step = 1,
-        value = 5
-      ),
-    ),
+    )
+  ),
+  fluidRow(
       # h3("Policy growth and retention"),
       # fluidRow(
       #   column(6, 
@@ -35,7 +29,7 @@ tab_imaginator <- tabPanel(
       #   ),
       # ),
     column(
-      width = 3,
+      width = 4,
       h3("Claim frequency"),
       wellPanel(
         distributions3_ui("claim_frequency")
@@ -46,7 +40,7 @@ tab_imaginator <- tabPanel(
       ),
     ), 
     column(
-      width = 3,
+      width = 4,
       h3("Occurrence wait time"),
       wellPanel(
         distributions3_ui("wait_occurrence")
@@ -57,7 +51,7 @@ tab_imaginator <- tabPanel(
       ),
     ),
     column(
-      width = 3,
+      width = 4,
       h3("Payment wait"),
       wellPanel(
         distributions3_ui("wait_payment")
@@ -67,28 +61,6 @@ tab_imaginator <- tabPanel(
         distributions3_ui("payment_severity")
       )
     ),
-    # fluidRow(
-    #   column(
-    #     3, 
-    #     h2("Policy counts by policy year"),
-    #     plotOutput("plt_policies", width = "60%")
-    #   ),
-    #   column(
-    #     3, 
-    #     h2("Claim counts by policy year"),
-    #     plotOutput("plt_claim_counts_by_policy_year", width = "60%")
-    #   ),
-    #   column(
-    #     3, 
-    #     h2('Payment totals by policy year'),
-    #     plotOutput("plt_payment_totals_by_policy_year", width = "60%")
-    #   ),
-    #   column(
-    #     3, 
-    #     h2('Payment totals by accident year'),
-    #     plotOutput("plt_payment_totals_by_accident_year", width = "60%")
-    #   )
-    # )
   )
 )
 
@@ -113,7 +85,7 @@ expr_imaginator <- quote({
     tbl_policies(
       policies_simulate(
         n = input$num_starting_policies,
-        num_years = input$num_policy_years,
+        num_years = input$years_exposure,
         retention = 1,
         growth = 0
       )
@@ -141,56 +113,6 @@ expr_imaginator <- quote({
         )
     })
     
-  })
-
-  output$plt_policies <- renderPlot({
-
-    validate(need(tbl_policies(), "Waiting on policy data"))
-
-    tbl_policies() %>%
-      mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>%
-      ggplot(aes(policy_year)) +
-      geom_bar() +
-      theme_minimal()
-  })
-  
-  output$plt_claim_counts_by_policy_year <- renderPlot({
-
-    validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
-
-    tbl_claims() %>%
-      mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>%
-      group_by(policy_year) %>%
-      summarise(n_claims = n()) %>%
-      ggplot(aes(policy_year, n_claims)) +
-      geom_bar(stat = 'identity') +
-      theme_minimal()
-  })
-
-  output$plt_payment_totals_by_policy_year <- renderPlot({
-
-    validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
-
-    tbl_claims() %>%
-      mutate(policy_year = lubridate::floor_date(policy_effective_date, unit = 'year')) %>%
-      group_by(policy_year) %>%
-      summarise(claim_amounts = sum(payment_amount)) %>%
-      ggplot(aes(policy_year, claim_amounts)) +
-      geom_bar(stat = 'identity') +
-      theme_minimal()
-  })
-
-  output$plt_payment_totals_by_accident_year <- renderPlot({
-
-    validate(need(tbl_claim_transactions(), "Waiting on claim transactions"))
-
-    tbl_claims() %>%
-      mutate(accident_year = lubridate::floor_date(occurrence_date, unit = 'year')) %>%
-      group_by(accident_year) %>%
-      summarise(claim_amounts = sum(payment_amount)) %>%
-      ggplot(aes(accident_year, claim_amounts)) +
-      geom_bar(stat = 'identity') +
-      theme_minimal()
   })
 
 })
