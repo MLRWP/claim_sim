@@ -18,6 +18,7 @@ ui <- navbarPage(
     , tab_imaginator
     , tab_synthetic
     , tab_cascsim
+    , tab_plots
     # , tab_data_tables
     # , tab_compare
 )
@@ -27,6 +28,7 @@ server <- function(input, output, session) {
     eval(expr_imaginator)
     eval(expr_cascsim)
     eval(expr_synthetic)
+    eval(expr_plots)
     # eval(expr_compare)
     # eval(expr_data_tables)
 }
