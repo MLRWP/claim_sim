@@ -26,16 +26,15 @@ tab_synthetic <- tabPanel(
           max = 12,
           step = 1,
           value = 3
-        ),
-      )
-      ,
+        )
+      ),
       # ),
       #    column(
       #      width = 2,
       # Start wellPanel: Select Module 1 occurance options
       wellPanel(
         selectInput(
-          "Occurence_selection",
+          "Occurence_selection_splice",
           "Module 1: Select occurence options",
           choices = c('Constant exposure and frequency'
                       ,'Increasing exposure and constant frequency'
@@ -43,14 +42,14 @@ tab_synthetic <- tabPanel(
                       , 'Constant exposure and zero-truncated Poisson frequency'
                       , 'Verying frequency across periods'
                       , 'Non-homogenous Poisson process'
-          )
+                      )
         ),
         # Start: 1. Constant exposure and frequency
         # years =
         # effective annual exposure rates = 
         # claims freuqency =
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Constant exposure and frequency'",
+          condition = "input.Occurence_selection_splice == 'Constant exposure and frequency'",
           numericInput(
             "eff_ann_exp_rate",
             "Effective Annual Exposure Rate",
@@ -75,7 +74,7 @@ tab_synthetic <- tabPanel(
         # effective annual exposure rates = 
         # claims freuqency =
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Increasing exposure and constant frequency'",
+          condition = "input.Occurence_selection_splice == 'Increasing exposure and constant frequency'",
           numericInput(
             "eff_ann_exp_rate",
             "Effective Annual Exposure Rate",
@@ -100,7 +99,7 @@ tab_synthetic <- tabPanel(
         # Negative binomial size = 
         # Negative binomial mu = 
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Constant exposure and negative binomial frequency'",
+          condition = "input.Occurence_selection_splice == 'Constant exposure and negative binomial frequency'",
           numericInput(
             "occurence_neg_bin_size",
             "Negative binomial size",
@@ -122,7 +121,7 @@ tab_synthetic <- tabPanel(
         
         # Start 4. Constant exposure and zero-truncated Poisson frequency
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Constant exposure and zero-truncated Poisson frequency'",
+          condition = "input.Occurence_selection_splice == 'Constant exposure and zero-truncated Poisson frequency'",
           numericInput(
             "lambda",
             "Non-negative means",
@@ -136,7 +135,7 @@ tab_synthetic <- tabPanel(
         
         # Start 5. Constant exposure and verying frequency across periods
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Verying frequency across periods'",
+          condition = "input.Occurence_selection_splice == 'Verying frequency across periods'",
           numericInput(
             "lambda",
             "Non-negative means",
@@ -150,7 +149,7 @@ tab_synthetic <- tabPanel(
         
         # Start 6. Non-homogenous Poisson process
         conditionalPanel(
-          condition = "input.Occurence_selection == 'Non-homogenous Poisson process'",
+          condition = "input.Occurence_selection_splice == 'Non-homogenous Poisson process'",
           numericInput(
             "pois_rate",
             "Poisson Rate",
@@ -160,9 +159,9 @@ tab_synthetic <- tabPanel(
             value = 3000
           )
         )
-        # End 6. Non-homogenous Poisson process
-        # input$rate
-      ) # REMOVED A COMMA HERE TO TEST
+      ) 
+      # End 6. Non-homogenous Poisson process
+      # input$rate
       # End wellPanel: Module 1 select occurance options
       ,
       #    ),
@@ -464,7 +463,7 @@ expr_synthetic <- quote({
     I(years / time_unit)
     
     # Module 1: Occurence
-    if (input$Occurence_selection == 'Constant exposure and frequency'){
+    if (input$Occurence_selection_splice == 'Constant exposure and frequency'){
       
       # Option 1: Constant exposure and frequency
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I()))
@@ -479,7 +478,7 @@ expr_synthetic <- quote({
       # n_vector <- claim_frequency(I, E = E * times, lambda)
       # occurrence_times <- claim_occurrence(n_vector)
       
-    } else if (input$Occurence_selection == 'Increasing exposure and constant frequency'){
+    } else if (input$Occurence_selection_splice == 'Increasing exposure and constant frequency'){
       
       # Option 2: Increasing exposure, constant frequency per unit of exposure
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I())) + seq(from = 0, by = 100, length = I()) # set linearly increasing exposure
@@ -487,7 +486,7 @@ expr_synthetic <- quote({
       n_vector(claim_frequency(I = I(), E = E, freq = lambda))
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
       
-    } else if (input$Occurence_selection == 'Constant exposure and negative binomial frequency'){
+    } else if (input$Occurence_selection_splice == 'Constant exposure and negative binomial frequency'){
       
       # Option 3: Negative binomial claim frequency distribution
       n_vector(claim_frequency(I = I(),
@@ -497,13 +496,13 @@ expr_synthetic <- quote({
       )
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
     }
-    else if (input$Occurence_selection == 'Constant exposure and zero-truncated Poisson frequency'){
+    else if (input$Occurence_selection_splice == 'Constant exposure and zero-truncated Poisson frequency'){
       
       # Option 4: Zero-truncated Poisson claim frequency distribution
       n_vector(claim_frequency(I = I(), simfun = actuar::rztpois, lambda = input$lambda))
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
       
-    } else if (input$Occurence_selection == 'Verying frequency across periods'){
+    } else if (input$Occurence_selection_splice == 'Verying frequency across periods'){
       
       # Option 5: Verying frequency across periods
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I())) + seq(from = 0, by = 100, length = I()) # set linearly increasing exposure
@@ -512,7 +511,7 @@ expr_synthetic <- quote({
       n_vector <- claim_frequency(I = I, simfun = actuar::rztpois, lambda = time_unit *E* lambda)
       occurrence_times <- claim_occurrence(frequency_vector = n_vector)
       
-    } else if (input$Occurence_selection == 'Non-homogenous Poisson process'){
+    } else if (input$Occurence_selection_splice == 'Non-homogenous Poisson process'){
       
       # Option 6: Non-homogenous Poisson process
       rnhpp.count <- function(I) {
