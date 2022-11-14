@@ -1,16 +1,21 @@
-library(SynthETIC)
-library(SPLICE)
-library(ChainLadder)
-library(sqldf)
 
-tab_synthetic <- tabPanel(
-  'SPLICE',
+library(plyr)
+library(lubridate)
+library(tidyr)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(tidyverse)
+options(dplyr.summarise.inform = FALSE)
+
+tab_hirem <- tabPanel(
+  'Hirem',
   fluidRow(
     column(
-      width = 5,
+      width = 2,
       wellPanel(
-        width = 2,
-        h5("Module 0: Configuration"), 
+        h5("Module 0: Configuration"),
         numericInput(
           "ref_claim",
           "Reference claim amount",
@@ -26,15 +31,15 @@ tab_synthetic <- tabPanel(
           max = 12,
           step = 1,
           value = 3
-        )
-      ),
-      # ),
-      #    column(
-      #      width = 2,
+        ),
+      )
+    ),
+    column(
+      width = 2,
       # Start wellPanel: Select Module 1 occurance options
       wellPanel(
         selectInput(
-          "Occurence_selection_splice",
+          "Occurence_selection",
           "Module 1: Select occurence options",
           choices = c('Constant exposure and frequency'
                       ,'Increasing exposure and constant frequency'
@@ -42,14 +47,14 @@ tab_synthetic <- tabPanel(
                       , 'Constant exposure and zero-truncated Poisson frequency'
                       , 'Verying frequency across periods'
                       , 'Non-homogenous Poisson process'
-                      )
+          )
         ),
         # Start: 1. Constant exposure and frequency
         # years =
         # effective annual exposure rates = 
         # claims freuqency =
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Constant exposure and frequency'",
+          condition = "input.Occurence_selection == 'Constant exposure and frequency'",
           numericInput(
             "eff_ann_exp_rate",
             "Effective Annual Exposure Rate",
@@ -74,7 +79,7 @@ tab_synthetic <- tabPanel(
         # effective annual exposure rates = 
         # claims freuqency =
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Increasing exposure and constant frequency'",
+          condition = "input.Occurence_selection == 'Increasing exposure and constant frequency'",
           numericInput(
             "eff_ann_exp_rate",
             "Effective Annual Exposure Rate",
@@ -99,7 +104,7 @@ tab_synthetic <- tabPanel(
         # Negative binomial size = 
         # Negative binomial mu = 
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Constant exposure and negative binomial frequency'",
+          condition = "input.Occurence_selection == 'Constant exposure and negative binomial frequency'",
           numericInput(
             "occurence_neg_bin_size",
             "Negative binomial size",
@@ -121,7 +126,7 @@ tab_synthetic <- tabPanel(
         
         # Start 4. Constant exposure and zero-truncated Poisson frequency
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Constant exposure and zero-truncated Poisson frequency'",
+          condition = "input.Occurence_selection == 'Constant exposure and zero-truncated Poisson frequency'",
           numericInput(
             "lambda",
             "Non-negative means",
@@ -135,7 +140,7 @@ tab_synthetic <- tabPanel(
         
         # Start 5. Constant exposure and verying frequency across periods
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Verying frequency across periods'",
+          condition = "input.Occurence_selection == 'Verying frequency across periods'",
           numericInput(
             "lambda",
             "Non-negative means",
@@ -149,7 +154,7 @@ tab_synthetic <- tabPanel(
         
         # Start 6. Non-homogenous Poisson process
         conditionalPanel(
-          condition = "input.Occurence_selection_splice == 'Non-homogenous Poisson process'",
+          condition = "input.Occurence_selection == 'Non-homogenous Poisson process'",
           numericInput(
             "pois_rate",
             "Poisson Rate",
@@ -159,14 +164,13 @@ tab_synthetic <- tabPanel(
             value = 3000
           )
         )
-      ) 
-      # End 6. Non-homogenous Poisson process
-      # input$rate
+        # End 6. Non-homogenous Poisson process
+        # input$rate
+      ) # REMOVED A COMMA HERE TO TEST
       # End wellPanel: Module 1 select occurance options
-      ,
-      #    ),
-      #    column(
-      #      width = 2,
+    ),
+    column(
+      width = 2,
       # Start wellPanel: Module 2 select occurance size options
       wellPanel(
         selectInput(
@@ -262,12 +266,11 @@ tab_synthetic <- tabPanel(
             value = 0.5e-5
           )
         )
-      )
-      ,
-      #    ), # End Module 2 select occurance size options
-      # Start wellPanel: Select Module 3 notification delay options
-      #    column(
-      #      width = 2,
+      ),
+    ), # End Module 2 select occurance size options
+    # Start wellPanel: Select Module 3 notification delay options
+    column(
+      width = 2,
       wellPanel(
         selectInput(
           "Notif_Delay_selection",
@@ -314,11 +317,10 @@ tab_synthetic <- tabPanel(
         )
         # End 3. Mixed distribution
       )
-      , #  
-      #    ), # End Module 3 notification delay options   
-      # Start wellPanel:Module 4 Closure delay options
-      #    column(
-      #      width = 2,
+    ), # End Module 3 notification delay options   
+    # Start wellPanel:Module 4 Closure delay options
+    column(
+      width = 2,
       wellPanel(
         selectInput(
           "Closure_Delay_Selection",
@@ -354,14 +356,14 @@ tab_synthetic <- tabPanel(
         )
         # End: 2. Dependence on notification delay
       ), # End Module 4 select occurance options
-      #     ),
-      # Start wellPanel: Module 5. Partial payment number
-      #     column(
-      #       width = 2,
+    ),
+    # Start wellPanel: Module 5. Partial payment number
+    column(
+      width = 2,
       wellPanel(
         selectInput(
           "Partial_Payment_Number_Selection",
-          "Module 5: Partial payment number",
+          "Module 5. Partial payment number",
           choices = c(
             'Mixture distribution',
             'Zero truncated Poisson')
@@ -393,64 +395,16 @@ tab_synthetic <- tabPanel(
         )
         # End: 2. Zero truncated Poisson
       ), # End Module 5 select occurance options
-      # , was there already in the above line. maybe need to remove it
-      #     ),
-      
-      # Start wellPanel: Module 6. Partial payment size
-      #    column(
-      #      width = 2,
-      wellPanel(
-        selectInput(
-          "Partial_Payment_Size_Selection",
-          "Module 6: Partial payment size",
-          choices = c(
-            'Mixture distribution',
-            'Equal partial payment sizes')
-        ),
-        # Start: 1. Mixture distribution
-        conditionalPanel(
-          condition = "input.Partial_Payment_Size_Selection == 'Mixture distribution'",
-          numericInput(
-            "prtl_pay_num_weibull_cv",
-            "Coefficient of variation",
-            min = 0.1,
-            max = 1,
-            step = 0.1,
-            value = 0.6
-          )
-        ),
-        # End: 1. Mixture distribution
-        # Start: 2. Zero truncated Poisson
-        conditionalPanel( 
-          condition = "input.Partial_Payment_Size_Selection == 'Equal partial payment sizes'",
-          numericInput(
-            "partl_pay_num_dly_cv",
-            "Coefficient of variation",
-            min = 0.1,
-            max = 1,
-            step = 0.1,
-            value = 0.6
-          )
-        )
-        # End: 2. Zero truncated Poisson
-      ), # End Module 5 select occurance options    
-      wellPanel(
-        downloadButton('download_Synthetic_Data', 'Download Synthetic Data'),
-        downloadButton('download_cumulative_triangle', 'Download Cumulative Triangle'),
-        downloadButton('download_result', 'Download Results')
-      )
     )
-  ),
-  
+  )
 )
 
-expr_synthetic <- quote({
+expr_hirem <- quote({
   
   n_vector <- reactiveVal(NULL)
   I <- reactiveVal(NULL)
   claim_sizes_default <- reactiveVal(NULL)
   claim_sizes <- reactiveVal(NULL)
-  tmp_cumm <- reactiveVal(NULL)
   
   observe({
     # Module 0: Configuration
@@ -463,7 +417,7 @@ expr_synthetic <- quote({
     I(years / time_unit)
     
     # Module 1: Occurence
-    if (input$Occurence_selection_splice == 'Constant exposure and frequency'){
+    if (input$Occurence_selection == 'Constant exposure and frequency'){
       
       # Option 1: Constant exposure and frequency
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I()))
@@ -478,7 +432,7 @@ expr_synthetic <- quote({
       # n_vector <- claim_frequency(I, E = E * times, lambda)
       # occurrence_times <- claim_occurrence(n_vector)
       
-    } else if (input$Occurence_selection_splice == 'Increasing exposure and constant frequency'){
+    } else if (input$Occurence_selection == 'Increasing exposure and constant frequency'){
       
       # Option 2: Increasing exposure, constant frequency per unit of exposure
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I())) + seq(from = 0, by = 100, length = I()) # set linearly increasing exposure
@@ -486,7 +440,7 @@ expr_synthetic <- quote({
       n_vector(claim_frequency(I = I(), E = E, freq = lambda))
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
       
-    } else if (input$Occurence_selection_splice == 'Constant exposure and negative binomial frequency'){
+    } else if (input$Occurence_selection == 'Constant exposure and negative binomial frequency'){
       
       # Option 3: Negative binomial claim frequency distribution
       n_vector(claim_frequency(I = I(),
@@ -496,13 +450,13 @@ expr_synthetic <- quote({
       )
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
     }
-    else if (input$Occurence_selection_splice == 'Constant exposure and zero-truncated Poisson frequency'){
+    else if (input$Occurence_selection == 'Constant exposure and zero-truncated Poisson frequency'){
       
       # Option 4: Zero-truncated Poisson claim frequency distribution
       n_vector(claim_frequency(I = I(), simfun = actuar::rztpois, lambda = input$lambda))
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
       
-    } else if (input$Occurence_selection_splice == 'Verying frequency across periods'){
+    } else if (input$Occurence_selection == 'Verying frequency across periods'){
       
       # Option 5: Verying frequency across periods
       E <- c(rep(as.numeric(input$eff_ann_exp_rate), I())) + seq(from = 0, by = 100, length = I()) # set linearly increasing exposure
@@ -511,7 +465,7 @@ expr_synthetic <- quote({
       n_vector <- claim_frequency(I = I, simfun = actuar::rztpois, lambda = time_unit *E* lambda)
       occurrence_times <- claim_occurrence(frequency_vector = n_vector)
       
-    } else if (input$Occurence_selection_splice == 'Non-homogenous Poisson process'){
+    } else if (input$Occurence_selection == 'Non-homogenous Poisson process'){
       
       # Option 6: Non-homogenous Poisson process
       rnhpp.count <- function(I) {
@@ -960,29 +914,10 @@ expr_synthetic <- quote({
       payment_inflated_list = payment_inflated
     )
     
-    transaction_dataset <- generate_transaction_dataset(
-      all_claims,
-      adjust = FALSE # to keep the original (potentially out-of-bound) simulated payment times
-    )
-    
-    
-    claims_db_pymnt_time <- sqldf("SELECT a.claim_no, a.pmt_no, a.claim_size, a.occurrence_time, a.notidel, a.setldel, a.notidel + sum(b.payment_delay) as payment_time, a.payment_size FROM transaction_dataset a join transaction_dataset b on a.claim_no = b.claim_no where a.pmt_no >= b.pmt_no group by a.claim_no, a.pmt_no")
-    
-    claims_db <- sqldf("SELECT claim_no, pmt_no, claim_size, floor(occurrence_time/4) + 2022 AS origin, floor(3*(payment_time - floor(payment_time/(4/4)))) + floor(payment_time/(4/4))*3 AS dev_m, floor(payment_time/(4/4)) AS dev_q, floor(payment_time/(4)) AS dev_a, payment_time, payment_size as value from claims_db_pymnt_time")
-    
-    # claims_m <- sqldf("SELECT origin, dev_m, sum(value) as value from claims_db group by origin, dev_m")
-    # claims_q <- sqldf("SELECT origin, dev_q, sum(value) as value from claims_db group by origin, dev_q")
-    
-    claims_a <- sqldf("SELECT origin, dev_a, sum(value) as value from claims_db group by origin, dev_a")
-    tmp <- as.triangle(claims_a,origin="origin",dev="dev_a",value="value")
-    tmp_cumm <- incr2cum(tmp)
-    
-    # write.table(transaction_dataset,file="test.txt",sep=",")
-    
-    # output$plot_claims <- renderPlot({
-    #   plot(all_claims, adjust = FALSE) +
-    #     ggplot2::labs(subtitle = paste("With x simulations"))
-    # })
+    output$plot_claims <- renderPlot({
+      plot(all_claims, adjust = FALSE) +
+        ggplot2::labs(subtitle = paste("With x simulations"))
+    })
     
     # Module 11. Major Revisions Frequency
     # Option 0: Short script
@@ -1044,38 +979,5 @@ expr_synthetic <- quote({
       }
     }
     
-    claims_dataset <- sqldf("SELECT a.claim_no, a.pmt_no, a.claim_size, a.occurrence_time, a.notidel, a.setldel, sum(b.payment_delay) as payment_time, a.payment_size FROM transaction_dataset a join transaction_dataset b on a.claim_no = b.claim_no where a.pmt_no >= b.pmt_no group by a.claim_no, a.pmt_no")
-    
-    # claims_db_pymnt_time <- sqldf("SELECT a.claim_no, a.pmt_no, a.claim_size, a.occurrence_time, a.notidel, a.setldel, a.notidel + sum(b.payment_delay) as payment_time, a.payment_size FROM claims_raw a join claims_raw b on a.claim_no = b.claim_no where a.pmt_no >= b.pmt_no group by a.claim_no, a.pmt_no")
-    
-    # write.table(transaction_dataset,file="test.txt",sep=",")
-    output$download_Synthetic_Data <- downloadHandler(
-      filename = function() {
-        paste('data-', Sys.Date(), '.csv', sep='')
-      },
-      content = function(con) {
-        write.csv(transaction_dataset, con, row.names=FALSE)
-      }
-    )
-    
-    output$download_cumulative_triangle <- downloadHandler(
-      filename = function() {
-        paste('cumulative-', Sys.Date(), '.csv', sep='')
-      },
-      content = function(con) {
-        write.csv(cumtri, con, row.names=FALSE)
-      }
-    )
-    
-    output$download_result <- downloadHandler(
-      filename = function() {
-        paste('result-', Sys.Date(), '.csv', sep='')
-      },
-      content = function(con) {
-        write.csv(square_inc, con, row.names=FALSE)
-      }
-    )
-    
   })
 })
-
