@@ -2,7 +2,7 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: main
+    branches: [main, dev_imaginator]
 
 name: shiny-deploy
 
@@ -16,25 +16,16 @@ jobs:
         uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-pandoc@v1
-
+      
       - name: Setup R
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
 
-      - name: Cache Renv packages
-        uses: actions/cache@v2
-        with:
-          path: $HOME/.local/share/renv
-          key: r-${{ hashFiles('renv.lock') }}
-          restore-keys: r-
+      - uses: r-lib/actions/setup-r-dependencies@v2
 
       - name: Install packages
         run: |
-          R -e 'install.packages("renv")'
-          R -e 'renv::restore()'
-
-      - name: Install rsconnect
-        run: install.packages("rsconnect")
-        shell: Rscript {0}
+          R -e 'install.packages(c("remotes", "rsconnect", "shiny", "tidyverse", "cascsim", "imaginator", "DT", "SynthETIC", "data.table", "scales"))'
+          R -e 'remotes::install_github("kasaai/simulationmachine")'
 
       - name: Authorize and deploy app
         run: |

@@ -52,7 +52,7 @@ tab_plots <- tabPanel(
 )
 
 expr_plots <- quote({
-  
+
   output$plot_n_vector <- renderPlot({
     plot(
       x = 1:I(), 
@@ -77,13 +77,13 @@ expr_plots <- quote({
       xlim = c(0, 2000000),
       main = "Module 2: Empirical distribution of simulated claim sizes",
       xlab = "Individual claim size")
-    
+
     plot(
       ecdf(unlist(claim_sizes())), 
       add = TRUE, 
       col = 2
     )
-    
+
     legend.text <- c("Default", input$Occurence_size)
     legend("bottomright", legend.text, col = 1:3, lty = 1, bty = "n")
     
@@ -138,5 +138,5 @@ expr_plots <- quote({
       geom_bar(stat = 'identity') +
       theme_minimal()
   })
-  
+
 })

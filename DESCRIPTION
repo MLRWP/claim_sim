@@ -1,0 +1,14 @@
+Package: dummy
+Version: 0.1.0
+Authors@R: person("Brian", "Fannin", email = "bfannin@casact.org", role = c("aut", "cre"))
+Depends:
+  remotes, 
+  rsconnect,
+  shiny,
+  tidyverse,
+  cascsim,
+  imaginator,
+  DT,
+  SynthETIC,
+  data.table,
+  scales
