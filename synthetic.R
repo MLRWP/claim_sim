@@ -217,7 +217,7 @@ tab_synthetic <- tabPanel(
           h5("Weibull option requires no parameter definition")
         ),
         # End: 3. Weibull
-        
+
         # Start: 3. Inverse Gaussian
         # years =
         # effective annual exposure rates = 
@@ -451,7 +451,7 @@ expr_synthetic <- quote({
   claim_sizes_default <- reactiveVal(NULL)
   claim_sizes <- reactiveVal(NULL)
   tmp_cumm <- reactiveVal(NULL)
-  
+
   observe({
     # Module 0: Configuration
     set.seed(as.numeric(input$rnd_seed))
@@ -485,9 +485,9 @@ expr_synthetic <- quote({
       lambda <- c(rep(as.numeric(input$claims_freq), I())) # set constant frequency per unit of exposure
       n_vector(claim_frequency(I = I(), E = E, freq = lambda))
       occurrence_times <- claim_occurrence(frequency_vector = n_vector())
-      
+
     } else if (input$Occurence_selection_splice == 'Constant exposure and negative binomial frequency'){
-      
+
       # Option 3: Negative binomial claim frequency distribution
       n_vector(claim_frequency(I = I(),
                                simfun = rnbinom,
@@ -547,7 +547,7 @@ expr_synthetic <- quote({
         }
       }
       claim_sizes(claim_size(frequency_vector = n_vector(), simfun = S_df, type = "p", range = c(0, 1e24)))
-      
+
       # print(glimpse(claim_sizes))
       
     } else if (input$Occurence_size == 'Weibull'){
@@ -558,12 +558,12 @@ expr_synthetic <- quote({
       claim_size_cv <- cv(test_claim_dataset$claim_size)
       weibull_shape <- get_Weibull_parameters(target_mean = claim_size_mean, target_cv = claim_size_cv)[1]
       weibull_scale <- get_Weibull_parameters(target_mean = claim_size_mean, target_cv = claim_size_cv)[2]
-      
+
       # simulate claim sizes with the estimated parameters
       claim_sizes(
         claim_size(frequency_vector = n_vector(),simfun = rweibull, shape = weibull_shape, scale = weibull_scale)
       )
-      
+
       # print(glimpse(claim_sizes))
     } else if (input$Occurence_size == 'Inverse Gaussian'){
       
@@ -637,7 +637,7 @@ expr_synthetic <- quote({
         
         c(shape = shape, scale = scale)
       }
-      
+
       notidel <- claim_notification(n_vector(), claim_sizes(), paramfun = notidel_param)
       
       # print(glimpse(notidel))
@@ -652,7 +652,7 @@ expr_synthetic <- quote({
       
       # simulate notification delays from the transformed gamma
       notidel <- claim_notification(n_vector(), claim_sizes(), rfun = actuar::rtrgamma, paramfun = trgamma_param, rate = 2)
-      
+
     } else if (input$Notif_Delay_selection == 'Mixed distribution') {
       
       # Part 3: Mixed distribution
@@ -669,7 +669,7 @@ expr_synthetic <- quote({
         return(result)
       }
       notidel <- claim_notification(n_vector(), claim_sizes(), rfun = rmixed_notidel)
-      
+
       # print(glimpse(notidel))
       
     }
@@ -682,11 +682,11 @@ expr_synthetic <- quote({
     #   legend.text <- c("Weibull (default)", input$Notif_Delay_selection)
     #   legend("bottomright", legend.text, col = 1:2, lty = 1, bty = "n")
     # })
-    
+
     # Module 4: Closure Delay
     
     if (input$Closure_Delay_Selection == 'Weibull'){
-      
+
       # Part 1: Default Weibull
       # specify the Weibull parameters as a function of claim_size and occurrence_period    
       setldel_param <- function(claim_size, occurrence_period) {
@@ -778,7 +778,6 @@ expr_synthetic <- quote({
       no_payments <- claim_payment_no(n_vector(), claim_sizes(), rfun = actuar::rztpois, paramfun = paymentNo_param)
       
     }
-    
     
     # print(glimpse(unlist(no_payments)))
     
@@ -945,7 +944,7 @@ expr_synthetic <- quote({
     payment_inflated <- claim_payment_inflation(
       n_vector(), payment_sizes, payment_times, occurrence_times,
       claim_sizes(), base_inflation_vector, SI_occurrence, SI_payment)
-    
+
     # Part 9: Output
     all_claims <- claims(
       frequency_vector = n_vector(),
@@ -1078,4 +1077,3 @@ expr_synthetic <- quote({
     
   })
 })
-
