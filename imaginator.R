@@ -18,18 +18,23 @@ tab_imaginator <- tabPanel(
             step = 5,
             value = 10
           ),
+          numericInput(
+            "num_policy_retention",
+            "Policy retention: Values between 0 and 1",
+            min = 0.01,
+            max = 1,
+            value = 1,
+            step = 0.01
+          ),
+          numericInput(
+            "num_policy_growth",
+            "Rate of policy growth",
+            min = 0,
+            max = 5,
+            step = .01,
+            value = 0
+          ),
         ),
-        # h3("Policy growth and retention"),
-        # fluidRow(
-        #   column(6, 
-        #     wellPanel(
-        #     ),
-        #   ), 
-        #   column(6, 
-        #     wellPanel(
-        #     ),
-        #   ),
-        # ),
         column(
           width = 4,
           h4("Claim frequency"),
@@ -102,16 +107,21 @@ expr_imaginator <- quote({
   
   observe({
 
-    tbl_policies(
+    tbl_policies({
+      validate(
+        need(is.numeric(input$num_policy_retention), "Please enter a numeric value for policy retention"),
+        need(input$num_policy_retention > 0.8, "Policy retention > 0.8")
+      )
       policies_simulate(
         n = input$num_starting_policies,
         num_years = input$years_exposure,
-        retention = 1,
-        growth = 0
+        retention = input$num_policy_retention,
+        growth = input$num_policy_growth
       )
-    )
+    })
     
     tbl_claim_transactions({
+      validate(need(tbl_policies(), "Waiting on policy table"))
       tbl_claim <- claims_by_wait_time(
         tbl_policies(),
         claim_frequency = dist_claim_frequency(),
