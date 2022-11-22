@@ -1,4 +1,5 @@
 library(imaginator)
+library(DT)
 source("distributions3_ui.R")
 
 tab_imaginator <- tabPanel(
@@ -74,9 +75,10 @@ tab_imaginator <- tabPanel(
         'rdo_data_table_im',
         'Which data table would you like to see?',
         choices = c('Policies' = 'policies', 'Claims' = 'claims', 'Claim transactions' = 'transactions'),
-        selected = 'transactions'
+        # selected = 'transactions'
+        selected = 'policies'
       ),
-      dataTableOutput("tbl_data_table_im")
+      DTOutput("tbl_data_table_im")
     )
   )
 )
@@ -86,6 +88,7 @@ expr_imaginator <- quote({
   tbl_policies <- reactiveVal(NULL)
   tbl_claim_transactions <- reactiveVal(NULL)
   tbl_claims <- reactiveVal(NULL)
+  # tbl_data_table_im <- reactiveVal(NULL)
   
   # dist_policyholder_growth <- reactiveVal(NULL)
   # dist_policyholder_retention <- reactiveVal(NULL)
@@ -130,59 +133,45 @@ expr_imaginator <- quote({
         )
     })
     
-    output$download_imaginator_policies <- downloadHandler(
-      filename = function() {
-        paste0('imaginator-policies-', Sys.Date(), '.csv')
-      },
-      content = function(con) {
-        write_csv(tbl_policies(), con)
-      },
-      contentType = 'text/csv'
-    )
-    
-    output$download_imaginator_claims <- downloadHandler(
-      filename = function() {
-        paste0('imaginator-claims-', Sys.Date(), '.csv')
-      },
-      content = function(con) {
-        write_csv(tbl_claims(), con)
-      },
-      contentType = 'text/csv'
-    )
-    
-    output$download_imaginator_claim_transactions <- downloadHandler(
-      filename = function() {
-        paste0('imaginator-claim-transactions-', Sys.Date(), '.csv')
-      },
-      content = function(con) {
-        write_csv(tbl_claim_transactions(), con)
-      },
-      contentType = 'text/csv'
-    )
-    
-    if (input$rdo_data_table_im == 'policies') {
-      output$tbl_data_table_im <- renderDataTable(
-        tbl_policies(),
-        options = list(
-          filter = 'top'
-        )
-      )
-    } else if (input$rdo_data_table_im == 'claims') {
-      output$tbl_data_table_im <- renderDataTable(
-        tbl_claims(),
-        options = list(
-          filter = 'top'
-        )
-      )
-    } else {
-      output$tbl_data_table_im <- renderDataTable(
-        tbl_claim_transactions(),
-        options = list(
-          filter = 'top'
-        )
-      )
-    }
-    
   })
 
+  output$download_imaginator_policies <- downloadHandler(
+    filename = function() {
+      paste0('imaginator-policies-', Sys.Date(), '.csv')
+    },
+    content = function(con) {
+      write_csv(tbl_policies(), con)
+    },
+    contentType = 'text/csv'
+  )
+  
+  output$download_imaginator_claims <- downloadHandler(
+    filename = function() {
+      paste0('imaginator-claims-', Sys.Date(), '.csv')
+    },
+    content = function(con) {
+      write_csv(tbl_claims(), con)
+    },
+    contentType = 'text/csv'
+  )
+  
+  output$download_imaginator_claim_transactions <- downloadHandler(
+    filename = function() {
+      paste0('imaginator-claim-transactions-', Sys.Date(), '.csv')
+    },
+    content = function(con) {
+      write_csv(tbl_claim_transactions(), con)
+    },
+    contentType = 'text/csv'
+  )
+  
+  output$tbl_data_table_im <- renderDT(
+    switch(
+      input$rdo_data_table_im,
+      policies = tbl_policies(),
+      claims = tbl_claims(),
+      transactions = tbl_claim_transactions(),
+    )
+  )
+  
 })
