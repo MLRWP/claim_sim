@@ -7,8 +7,12 @@ Depends:
   shiny,
   tidyverse,
   cascsim,
+  ChainLadder,
+  distributions3,
   imaginator,
   DT,
   SynthETIC,
+  SPLICE,
+  sqldf,
   data.table,
   scales
